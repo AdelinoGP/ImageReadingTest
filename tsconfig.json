@@ -1,0 +1,33 @@
+{
+    "compilerOptions": {
+      "target": "ES2019",
+      "module": "commonjs",
+      "allowJs": true,
+      "skipLibCheck": true,
+      "preserveSymlinks": true,
+      "checkJs": false,
+      "jsx": "preserve",
+      "sourceMap": true,
+      "outDir": "build",
+      "incremental": true,
+      "strict": false,
+      "strictNullChecks": false,
+      "noUnusedLocals": true,
+      "moduleResolution": "node",
+      "declarationMap": true,
+      "declaration": true,
+      "baseUrl": "./",
+      "paths": {
+        "@/*": ["src/*"],
+        "@modules/*": ["./src/modules/*"],
+        "@models/*": ["./src/models/*"],
+        "@utils/*": ["./src/utils/*"]
+      },
+      "esModuleInterop": true,
+  
+      "resolveJsonModule": true
+    },
+    "include": ["src/**/*", "package.json"],
+    "exclude": ["node_modules"]
+  }
+  
