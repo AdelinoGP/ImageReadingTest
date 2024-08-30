@@ -1,0 +1,35 @@
+version: '1'
+services:
+  service:
+    build: .
+    depends_on:
+      - db
+    ports:
+      - 80:80
+    expose:
+      - 80
+    restart: "always"
+    volumes:
+       - .env:/usr/app/.env
+    # environment:
+      #-  "DATABASE_URL=mysql://db_user:123456@db:3306/application"
+
+  db:
+    image: mariadb
+    restart: unless-stopped
+    volumes:
+      - mysql_data:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${REMOTE_DB_PASSWORD}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: ${DB_DATABASE}
+    healthcheck:
+      test: mysqladmin ping -h 127.0.0.1 -u ${DB_USER} --password=${DB_PASSWORD}
+      timeout: 20s
+      retries: 10
+    ports:
+      - ${DB_EXTERNAL_PORT}:${DB_PORT}
+
+volumes:
+  mysql_data:

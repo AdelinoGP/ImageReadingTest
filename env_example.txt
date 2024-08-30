@@ -1,0 +1,12 @@
+# mysql://USER:PASSWORD@HOST:PORT/DATABASE
+DATABASE_URL="mysql://root:db_password@localhost:3306/db_database"
+
+DB_HOST=db
+DB_EXTERNAL_PORT=3306
+DB_PORT=3306
+DB_USER=db_user
+REMOTE_DB_PASSWORD=db_password
+DB_PASSWORD=db_password
+DB_DATABASE=db_database
+
+GEMINI_API_KEY = gemini_Key
