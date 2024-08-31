@@ -48,4 +48,6 @@ process.on("unhandledRejection", (reason, promise) => {
 
 process.on("SIGINT", () => process.exit(0));
 
-LogInfo("Servidor node iniciou", context);
+const port = parseInt(process.env.SERVER_PORT);
+
+server.listen(port, () => LogInfo(`Servidor node iniciou na porta ${port}`, context));
