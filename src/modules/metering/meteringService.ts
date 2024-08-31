@@ -53,7 +53,7 @@ export async function MeterConfirmService(
   const measurementExists = await MeasurementExistsRepo(measure_uuid);
   if (!measurementExists) throw Error("MEASURE_NOT_FOUND");
   const measurementAlreadyConfirmed = await MeasurementConfirmedRepo(measure_uuid);
-  if (!measurementAlreadyConfirmed) throw Error("CONFIRMATION_DUPLICATE");
+  if (measurementAlreadyConfirmed) throw Error("CONFIRMATION_DUPLICATE");
 
   await ConfirmMeasurementRepo(measure_uuid, confirmed_value);
 }
