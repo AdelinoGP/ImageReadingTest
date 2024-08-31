@@ -19,6 +19,7 @@ services:
     restart: unless-stopped
     volumes:
       - mysql_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     environment:
       MYSQL_ROOT_PASSWORD: ${REMOTE_DB_PASSWORD}
       MYSQL_USER: ${DB_USER}

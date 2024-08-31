@@ -9,4 +9,6 @@ REMOTE_DB_PASSWORD=db_password
 DB_PASSWORD=db_password
 DB_DATABASE=db_database
 
+SERVER_PORT= 80
+
 GEMINI_API_KEY = gemini_Key
