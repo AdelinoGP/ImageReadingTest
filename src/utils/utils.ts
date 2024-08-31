@@ -5,6 +5,11 @@ import mime from "mime";
 
 export const filesFolder = path.resolve("Files");
 
+export function StringIsBase64(base64Image: string): boolean {
+    const regex = /^data:image\/(?:gif|png|jpeg|bmp|webp|svg\+xml)(?:;charset=utf-8)?;base64,(?:[A-Za-z0-9]|[+/])+={0,2}/;
+    return base64Image && regex.test(base64Image);
+}
+
 export function SaveBase64Image(
   base64Image: string,
   outputDir: string,

@@ -9,13 +9,14 @@ import {
   MeterReadoutService,
 } from "./meteringService";
 import { MeteringType } from "@prisma/client";
+import { StringIsBase64 } from "@/utils/utils";
 
 const UploadSchema = Joi.object({
-  image: Joi.string().base64().required(),
+  image: Joi.string().required(),
   customer_code: Joi.string().required(),
   measure_datetime: Joi.date().required(),
   measure_type: Joi.string()
-    .lowercase()
+    .uppercase()
     .valid(...Object.values(MeteringType))
     .required(),
 });
@@ -26,6 +27,9 @@ export async function UploadRoute(req: Request, res: Response) {
     LogInfo("Validating Inputs", context);
     const { image, customer_code, measure_datetime, measure_type } =
       await UploadSchema.validateAsync(req?.body);
+
+    if(!StringIsBase64(image))
+      throw("String is not Base64");
 
     const { measurement, fileUrl } = await MeterReadoutService(
       image,
@@ -39,7 +43,7 @@ export async function UploadRoute(req: Request, res: Response) {
       measure_uuid: measurement.measureUUID,
     });
   } catch (error) {
-    if (error == "DOUBLE_REPORT")
+    if (error.message == "DOUBLE_REPORT")
       return Conflict(res, {
         error_code: "DOUBLE_REPORT",
         error_description: "Leitura do mês já realizada",
@@ -67,14 +71,14 @@ export async function ConfirmRoute(req: Request, res: Response) {
     await MeterConfirmService(measure_uuid, confirmed_value);
     Ok(res, { success: true });
   } catch (error) {
-    if (error == "MEASURE_NOT_FOUND")
+    if (error.message == "MEASURE_NOT_FOUND")
       //Todo: Verificar se essa é a descrição certa para este erro
       return NotFound(res, {
         error_code: "MEASURE_NOT_FOUND",
         error_description: "Leitura do mês já realizada",
       });
 
-    if (error == "CONFIRMATION_DUPLICATE")
+    if (error.message == "CONFIRMATION_DUPLICATE")
       //Todo: Verificar se essa é a descrição certa para este erro
       return NotFound(res, {
         error_code: "CONFIRMATION_DUPLICATE",
@@ -95,27 +99,26 @@ export async function GetMeasuresRoute(req: Request, res: Response) {
     const customerCode = await Joi.string()
       .required()
       .validateAsync(String(req.params.customerCode));
-      
-    const meteringType =
-      MeteringType[
-        await Joi.string()
-          .lowercase()
-          .valid(Object.values(MeteringType))
-          .optional()
-          .error(Error("INVALID_TYPE"))
-          .validateAsync(String(req.params.customerCode))
-      ];
 
-    const measures = GetMeasurementsService(customerCode, meteringType);
+    const meteringTypeAsString = req.params.measure_type;
+
+    let meteringType: MeteringType | undefined;
+    if(meteringTypeAsString){
+      if(!(meteringTypeAsString in MeteringType))
+        throw Error("INVALID_TYPE");
+      meteringType = MeteringType[meteringTypeAsString.toLowerCase()];
+    }
+
+    const measures = await GetMeasurementsService(customerCode, meteringType);
     Ok(res, { customer_code: customerCode, measures });
   } catch (error) {
-    if (error == "MEASURES_NOT_FOUND")
+    if (error.message == "MEASURES_NOT_FOUND")
       return NotFound(res, {
         error_code: "MEASURES_NOT_FOUND",
         error_description: "Nenhuma leitura encontrada",
       });
 
-    if (error == "INVALID_TYPE")
+    if (error.message == "INVALID_TYPE")
       return NotFound(res, {
         error_code: "INVALID_TYPE",
         error_description: "Tipo de medição não permitida",

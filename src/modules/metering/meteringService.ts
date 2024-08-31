@@ -30,7 +30,9 @@ export async function MeterReadoutService(
   const imageFilePath = SaveBase64Image(image, meterImageBucket, measureUUID);
 
   const readout = await ReadMeterFromImage(imageFilePath);
-  const measuredValue = Number(readout.responseText) ?? 0;
+  let measuredValue = Math.floor(Number(readout.responseText));
+  if(Number.isNaN(measuredValue))
+    measuredValue = 0;
 
   const measurement = await CreateMeasurementRepo(
     customerCode,
