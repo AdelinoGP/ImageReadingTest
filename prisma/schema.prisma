@@ -7,6 +7,20 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum MeteringType {
+  WATER
+  GAS
+}
+
 model MeteringMeasurement {
-  id     Int    @id @default(autoincrement()) @db.UnsignedInt
+  id              Int          @id @default(autoincrement()) @db.UnsignedInt
+  imageUrl        String       @db.VarChar(254)
+  customerCode    String       @db.VarChar(254)
+  confirmed       Boolean      @default(false)
+  measureUUID     String       @db.VarChar(254)
+  measureValue    Int          @db.Int
+  measureDatetime DateTime
+  measureType     MeteringType
+
+  @@unique(measureUUID)
 }
