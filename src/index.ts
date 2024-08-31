@@ -7,7 +7,7 @@ import http from "http";
 
 import { router } from "./routes";
 
-const context = "Iniciando servidor";
+const context = "Starting server";
 
 const app = express();
 
@@ -17,9 +17,8 @@ app.use(express.urlencoded({
 }));
 app.use(cors());
 app.use((req, res, next) => {
-  //Qual site tem permissão de realizar a conexão, no exemplo abaixo está o "*" indicando que qualquer site pode fazer a conexão
   res.header("Access-Control-Allow-Origin", "*");
-  //Quais são os métodos que a conexão pode realizar na API
+  //Methods accepted by the API
   res.header("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE");
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization, 'Content-Type' : 'multipart/form-data' ,* ");
   res.header("X-Accel-Buffering", "no");
@@ -29,8 +28,8 @@ app.use(express.json({ limit: "250mb" }));
 app.use(router);
 app.use((req, res) => {
   const ip = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
-  LogInfo("Pedido do ip " + ip + " para rota não existente: " + req.method + req.path, "Rota inválida");
-  res.status(404).json({ success: false, error: { error: "invalidRoute", message: "Ação solicitada não está disponível" } });
+  LogInfo("Request from " + ip + " to non existant route: " + req.method + req.path, "Invalid Route");
+  res.status(404).json({ success: false, error: { error: "invalidRoute", message: "The route you tried to connect to is not available" } });
 });
 
 app.options("*", cors());
@@ -38,16 +37,16 @@ app.options("*", cors());
 const server = http.createServer(app);
 
 process.on("uncaughtException", function (err, origin) {
-  LogError(`Exceção não tratada no processo: ${err}, Origem ${origin}`, "Erro não gerenciado");
+  LogError(`Untreated exception: ${err}, Origin ${origin}`, "Uncaught Exception");
   console.trace();
 });
 
 process.on("unhandledRejection", (reason, promise) => {
-  LogError(`Rejeição não tratada na promessa: ${promise}, Razão ${reason}`, "Rejeição não gerenciado");
+  LogError(`Rejection not handled by promise: ${promise}, Reason ${reason}`, "Unhandled Rejection");
 });
 
 process.on("SIGINT", () => process.exit(0));
 
 const port = parseInt(process.env.SERVER_PORT);
 
-server.listen(port, () => LogInfo(`Servidor node iniciou na porta ${port}`, context));
+server.listen(port, () => LogInfo(`Node server started on port ${port}`, context));
