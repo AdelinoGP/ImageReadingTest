@@ -1,9 +1,14 @@
 import Joi from "joi";
 import { Request, Response } from "express";
 
-import { MeteringType } from "./meteringModel";
 import { LogInfo } from "@/utils/logger";
-import { BadRequest, Ok } from "@/utils/httpResponse";
+import { BadRequest, Conflict, NotFound, Ok } from "@/utils/httpResponse";
+import {
+  GetMeasurementsService,
+  MeterConfirmService,
+  MeterReadoutService,
+} from "./meteringService";
+import { MeteringType } from "@prisma/client";
 
 const UploadSchema = Joi.object({
   image: Joi.string().base64().required(),
@@ -11,7 +16,7 @@ const UploadSchema = Joi.object({
   measure_datetime: Joi.date().required(),
   measure_type: Joi.string()
     .lowercase()
-    .valid(Object.values(MeteringType))
+    .valid(...Object.values(MeteringType))
     .required(),
 });
 
@@ -22,15 +27,27 @@ export async function UploadRoute(req: Request, res: Response) {
     const { image, customer_code, measure_datetime, measure_type } =
       await UploadSchema.validateAsync(req?.body);
 
-    const readout = MeterReadoutService(
+    const { measurement, fileUrl } = await MeterReadoutService(
       image,
       customer_code,
       measure_datetime,
-      measure_type,
+      measure_type
     );
-    Ok(res, readout);
+    Ok(res, {
+      image_url: fileUrl,
+      measure_value: measurement.measureValue,
+      measure_uuid: measurement.measureUUID,
+    });
   } catch (error) {
-    return BadRequest(res, error);
+    if (error == "DOUBLE_REPORT")
+      return Conflict(res, {
+        error_code: "DOUBLE_REPORT",
+        error_description: "Leitura do mês já realizada",
+      });
+    return BadRequest(res, {
+      error_code: "INVALID_DATA",
+      error_description: error,
+    });
   }
 }
 
@@ -44,13 +61,30 @@ export async function ConfirmRoute(req: Request, res: Response) {
   try {
     LogInfo("Validating Inputs", context);
     const { measure_uuid, confirmed_value } = await ConfirmSchema.validateAsync(
-      req?.body,
+      req?.body
     );
 
-    const confirmedResult = ConfirmService(measure_uuid, confirmed_value);
-    Ok(res, confirmedResult);
+    await MeterConfirmService(measure_uuid, confirmed_value);
+    Ok(res, { success: true });
   } catch (error) {
-    return BadRequest(res, error);
+    if (error == "MEASURE_NOT_FOUND")
+      //Todo: Verificar se essa é a descrição certa para este erro
+      return NotFound(res, {
+        error_code: "MEASURE_NOT_FOUND",
+        error_description: "Leitura do mês já realizada",
+      });
+
+    if (error == "CONFIRMATION_DUPLICATE")
+      //Todo: Verificar se essa é a descrição certa para este erro
+      return NotFound(res, {
+        error_code: "CONFIRMATION_DUPLICATE",
+        error_description: "Leitura do mês já realizada",
+      });
+
+    return BadRequest(res, {
+      error_code: "INVALID_DATA",
+      error_description: error,
+    });
   }
 }
 
@@ -61,16 +95,32 @@ export async function GetMeasuresRoute(req: Request, res: Response) {
     const customerCode = await Joi.string()
       .required()
       .validateAsync(String(req.params.customerCode));
-    const meteringType = await Joi.string()
-      .lowercase()
-      .valid(Object.values(MeteringType))
-      .optional()
-      .validateAsync(String(req.params.customerCode));
+      
+    const meteringType =
+      MeteringType[
+        await Joi.string()
+          .lowercase()
+          .valid(Object.values(MeteringType))
+          .optional()
+          .error(Error("INVALID_TYPE"))
+          .validateAsync(String(req.params.customerCode))
+      ];
 
-    const measures = GetMeasuresService(customerCode, meteringType);
-    Ok(res, measures);
-  }
-  catch (error) {
+    const measures = GetMeasurementsService(customerCode, meteringType);
+    Ok(res, { customer_code: customerCode, measures });
+  } catch (error) {
+    if (error == "MEASURES_NOT_FOUND")
+      return NotFound(res, {
+        error_code: "MEASURES_NOT_FOUND",
+        error_description: "Nenhuma leitura encontrada",
+      });
+
+    if (error == "INVALID_TYPE")
+      return NotFound(res, {
+        error_code: "INVALID_TYPE",
+        error_description: "Tipo de medição não permitida",
+      });
+
     return BadRequest(res, error);
   }
 }
