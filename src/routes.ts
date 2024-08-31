@@ -1,6 +1,8 @@
 import { Router } from "express";
 
 import { LogInfo } from "@/utils/logger";
+import { Route } from "./utils/route";
+import { ConfirmRoute, GetMeasuresRoute, UploadRoute } from "./modules/metering/meteringController";
 
 export const defaultFileLimit = {
   limits: {
@@ -11,11 +13,16 @@ export const defaultFileLimit = {
 
 const router = Router();
 
+router.get("/:customerCode/list", Route(GetMeasuresRoute));
+router.patch("/confirm", Route(ConfirmRoute));
+router.post("/upload", Route(UploadRoute));
+
+
 router.get("/", (_req, res) => {
-  LogInfo("Informando que URL está certa", "URL teste");
+  LogInfo("Testing server route", "Testing URL");
   res.send(`
-    <h1>URL correta para socket</h1>
-    <p>Se você está vendo essa página, a url para o socket está correta</p>
+    <h1>Test URL</h1>
+    <p>If you are seeing this page, the server is running correctly</p>
   `);
 });
 
