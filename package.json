@@ -74,6 +74,7 @@
     "joi": "^17.6.0",
     "jsonwebtoken": "^8.5.1",
     "mariadb": "2.5.3",
+    "mime-types": "^2.1.35",
     "mysql": "2.18.1",
     "mysql2": "2.2.2",
     "node": "^22.7.0",
@@ -82,7 +83,7 @@
     "rimraf": "^3.0.2",
     "swagger-ui-express": "^4.3.0",
     "tsconfig-paths": "^4.1.0",
-    "uuid": "^9.0.0",
+    "uuid": "^10.0.0",
     "winston": "3.3.3",
     "winston-daily-rotate-file": "4.5.1"
   }
